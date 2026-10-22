@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ПОТОК — Найди путь</title>
+<style>
+:root{--bg:#07111f;--panel:#101f33;--line:#243c57;--cyan:#36d9ff;--green:#68f6b0;--red:#ff6178;--gold:#ffd36a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#132b45,#07111f 60%);color:#eaf6ff;font:15px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{max-width:1000px;margin:auto;padding:16px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{font-size:clamp(24px,4vw,38px);font-weight:900;letter-spacing:.12em}.brand span{color:var(--cyan)}.sub{color:#8ca9c5;font-size:13px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.pill,.btn{border:1px solid var(--line);background:#102139;color:#eaf6ff;border-radius:12px;padding:9px 12px}.pill b{color:var(--cyan)}.layout{display:grid;grid-template-columns:minmax(0,1fr) 245px;gap:14px;margin-top:16px}.board-wrap,.side{background:#0d1b2c;border:1px solid #203951;border-radius:18px;padding:12px;box-shadow:0 15px 40px #0003}.board{display:grid;gap:3px;width:100%;touch-action:manipulation}.cell{aspect-ratio:1;min-width:0;border:1px solid #203952;border-radius:6px;background:linear-gradient(145deg,#132940,#0a1727);position:relative;display:grid;place-items:center;overflow:hidden;cursor:pointer;transition:background .15s,border-color .15s; padding:0}.cell:focus-visible{outline:2px solid white}.cell.locked{cursor:not-allowed;border-color:#a88a48;background:linear-gradient(145deg,#3a3424,#171f2a)}.cell.source,.cell.goal{border-color:#3b7890;background:#102f42}.cell.pump{border:2px solid #ffd36a;background:linear-gradient(145deg,#4a3b1b,#1d2430);box-shadow:inset 0 0 0 1px #ffd36a55}.cell.pump .glyph{filter:drop-shadow(0 0 3px #ffd36a)}.cell.poison{border-color:#a34d4d;background:#321d29}.glyph{width:100%;height:100%;display:block}.water{stroke:var(--cyan);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;fill:none;opacity:.95;filter:drop-shadow(0 0 3px #36d9ff)}.dirty{stroke:#c7ef3d;filter:drop-shadow(0 0 4px #c7ef3d)}.basepipe{stroke:#405d76;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;fill:none}.hub{fill:#405d76}.flowdot{fill:#c9f8ff;filter:drop-shadow(0 0 3px #36d9ff)}.dirtydot{fill:#e9ff66;filter:drop-shadow(0 0 3px #c7ef3d)}.badge{position:absolute;right:2px;top:1px;font-size:clamp(8px,1.5vw,12px);opacity:.95;pointer-events:none}.cell .lockmark{position:absolute;left:2px;top:1px;font-size:clamp(8px,1.4vw,12px)}.cell.filled{background:#0d3543}.cell.contaminated{background:#35421b;border-color:#b8d73c}.cell.active{border-color:var(--cyan)}.cell.danger{border-color:var(--red)}.side h3{margin:4px 0 8px}.side p{color:#a7bfd5;line-height:1.45;font-size:13px}.btn{cursor:pointer;font-weight:700;transition:transform .12s,background .12s;width:100%;margin:4px 0}.btn:hover{background:#193553}.btn:active{transform:scale(.98)}.btn.primary{background:#0f5269;border-color:#2389a5}.btn.warn{border-color:#765c30}.meter{height:8px;background:#1b3046;border-radius:20px;overflow:hidden;margin:10px 0}.meter div{height:100%;width:0;background:linear-gradient(90deg,#2cc8ff,#6fffc0);transition:width .15s}.message{min-height:42px;color:#a8c4d9;font-size:13px;margin:8px 0}.legend{display:flex;flex-wrap:wrap;gap:8px;color:#a6bdd1;font-size:12px;margin-top:10px}.legend span{display:flex;gap:5px;align-items:center}.dot{width:8px;height:8px;border-radius:50%;background:var(--cyan)}.dot.d{background:#c7ef3d}.dot.l{background:var(--gold)}.mobile-controls{display:none}.overlay{position:fixed;inset:0;background:#020812c9;display:none;place-items:center;padding:20px;z-index:5}.overlay.show{display:grid}.modal{max-width:420px;width:100%;padding:24px;background:#102139;border:1px solid #34516c;border-radius:20px;text-align:center}.levels-modal{max-width:620px}.levels-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;max-height:55vh;overflow:auto;margin:14px 0}.level-choice{position:relative;min-height:42px;border:1px solid #34516c;border-radius:10px;background:#0a1929;color:#eaf6ff;font-weight:800;cursor:pointer}.level-choice.done{border-color:#68f6b0;background:#12372f;color:#9bffce}.level-choice.current{outline:2px solid #36d9ff}.level-choice .check{position:absolute;right:4px;top:0;font-size:11px;color:#68f6b0}@media(max-width:420px){.levels-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}.modal h2{margin-top:0}.modal p{color:#abc3d8;line-height:1.5}
+@media(max-width:760px){main{padding:10px}.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}.side h3,.side .message,.side .meter,.side .legend{grid-column:1/-1}.side p{margin:4px 0}.board-wrap{padding:7px}.cell{border-radius:4px}.stats{gap:5px}.pill{padding:7px 9px;font-size:12px}}
+
+.cell svg{transform-origin:50% 50%;transform-box:fill-box}
+.cell svg.pipe-turn{animation:pipeTurn .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes pipeTurn{0%{transform:rotate(-90deg) scale(.92)}100%{transform:rotate(0deg) scale(1)}}
+.board-viewport{width:100%;overflow:auto;touch-action:pan-x pan-y;position:relative;border-radius:10px;max-height:72vh}
+.board-zoom{transform-origin:top left;will-change:transform}
+#zoomControls{display:flex;gap:8px;align-items:center;justify-content:center;margin:8px 0;flex-wrap:wrap}
+#zoomControls button{background:#18324b;color:#eaf6ff;border:1px solid #34516e;border-radius:10px;padding:7px 12px;font:inherit;min-width:42px}
+#zoomValue{min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
+#pressureHud{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0c1b2b;border:1px solid #284663;border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14px;flex-wrap:wrap}
+#pressureHud strong{color:#ffd36a}
+@media(max-width:600px){main{padding:8px}.cell{border-radius:3px}.board{gap:2px}#pressureHud{font-size:12px;padding:7px 9px}}
+</style>
+</head>
+<body><main>
+<header class="top"><div><div class="brand">ПО<span>ТОК</span></div><div class="sub">Собери сеть. Следи за каждым ответвлением.</div></div><div class="stats"><div class="pill">Уровень <b id="level">1 / 100</b></div><div class="pill">Поле <b id="size">5×5</b></div><div class="pill">Подсказки <b id="hints">3</b></div></div></header>
+<div class="layout"><section class="board-wrap"><div id="pressureHud"><span>Напор потока</span><strong id="pressureValue">20 клеток</strong><span id="pressureDetail">Базовый напор</span></div><div id="zoomControls"><button id="zoomOut" type="button" aria-label="Уменьшить масштаб">−</button><span id="zoomValue">100%</span><button id="zoomIn" type="button" aria-label="Увеличить масштаб">+</button><button id="zoomReset" type="button">Сброс масштаба</button></div><div class="board-viewport" id="boardViewport"><div class="board-zoom" id="boardZoom"><div class="board" id="board" aria-label="Игровое поле"></div></div></div><div class="legend"><span><i class="dot"></i> Чистая вода</span><span><i class="dot d"></i> Грязная вода</span><span><i class="dot l"></i> Неподвижная труба</span><span>🟡 <b>Насос +5/+8/+12/+16</b></span></div></section>
+<aside class="side"><h3>Задача уровня</h3><p id="objective">Проведи чистую воду от источника к цели. Любое соединённое ответвление тоже заполнится.</p><div class="meter"><div id="progress"></div></div><div class="message" id="message" aria-live="polite">Вода уже течёт — поворачивай трубы!</div><button class="btn primary" id="hintBtn">✦ Подсказка (3)</button><button class="btn" id="levelsBtn">▦ Уровни</button><button class="btn" id="nextBtn" style="display:none">Следующий уровень →</button><button class="btn" id="soundBtn">♫ Звук: выкл.</button><p>Коснись трубы, чтобы повернуть её на 90°. Поток распространяется автоматически в реальном времени.</p></aside></div>
+</main><div class="overlay" id="overlay"><div class="modal"><h2 id="modalTitle">Уровень пройден!</h2><p id="modalText"></p><button class="btn primary" id="modalBtn">Продолжить →</button></div></div>
+<div class="overlay" id="levelsOverlay"><div class="modal levels-modal"><h2>Выбор уровня</h2><p>Все уровни доступны. Пройденные отмечены галочкой.</p><div id="levelsGrid" class="levels-grid"></div><button class="btn" id="closeLevelsBtn">Закрыть</button></div></div>
+<script>
+(()=>{'use strict';
+const DIRS=[1,2,4,8], DX=[0,1,0,-1], DY=[-1,0,1,0], NAMES=['N','E','S','W'];
+const boardEl=document.getElementById('board'), $=id=>document.getElementById(id);let boardScale=1,rotatingIndex=-1;
+let level=1, board=[], source=0, goal=0, dirtySource=-1, hints=3, moves=0, won=false, lost=false, soundOn=true, audioCtx=null, lastTick=0, flowState=new Map(), levelSeed=1;
+const completedLevels=new Set();
+try { const saved=JSON.parse(localStorage.getItem('potok_completed_levels')||'[]'); saved.forEach(v=>{if(Number.isInteger(v)&&v>=1&&v<=100)completedLevels.add(v)}); } catch(e) {}
+const bit=d=>1<<d, has=(mask,d)=>(mask&bit(d))!==0, rotateMask=m=>((m<<1)&15)|((m&8)>>3);
+function randFactory(seed){let x=seed>>>0;return()=>{x=(x*1664525+1013904223)>>>0;return x/4294967296}}
+function shuffle(a,r){for(let i=a.length-1;i>0;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function index(x,y,n){return y*n+x}
+function neighbors(i,n){let x=i%n,y=Math.floor(i/n),a=[];for(let d=0;d<4;d++){let nx=x+DX[d],ny=y+DY[d];if(nx>=0&&nx<n&&ny>=0&&ny<n)a.push({i:index(nx,ny,n),d})}return a}
+function connectedMask(edges,i){let m=0;for(let e of edges){if(e.a===i)m|=bit(e.d);if(e.b===i)m|=bit((e.d+2)%4)}return m}
+function makeLevel(L){
+ level=L; levelSeed=0x9e3779b9 ^ (L*7919);
+ const r=randFactory(levelSeed), n=Math.min(20,5+Math.floor((L-1)/5)); const count=n*n;
+ // Randomized spanning tree: every node is reachable, then use a source-goal route plus branches.
+ let seen=new Uint8Array(count), parent=new Int32Array(count).fill(-1), order=[], stack=[0]; seen[0]=1;
+ while(stack.length){let cur=stack[stack.length-1];order.push(cur);let opts=neighbors(cur,n).filter(v=>!seen[v.i]);if(!opts.length){stack.pop();continue}let v=opts[Math.floor(r()*opts.length)];seen[v.i]=1;parent[v.i]=cur;stack.push(v.i)}
+ source=0;goal=count-1;
+ let path=[], pathSet=new Set(), cur=goal;while(cur!==-1){path.push(cur);pathSet.add(cur);cur=parent[cur]} path.reverse();
+ // Network includes the full spanning tree, guaranteeing all cells participate in the water network.
+ let edges=[];
+ for(let i=1;i<count;i++){let p=parent[i], diff=i-p,d=diff===n?2:diff===-n?0:diff===1?1:3;edges.push({a:p,b:i,d})}
+ // Tree is the designed solution. Place contaminated source as a special side node connected only after a wrong rotation.
+ dirtySource=-1;
+ if(L>=5){
+   let candidates=[];for(let i=0;i<count;i++)if(i!==source&&i!==goal)candidates.push(i);
+   shuffle(candidates,r);
+   // Contaminant source is adjacent to a movable pipe; its connection points into a direction
+   // not used by the clean tree solution. It will flow if the player opens that side.
+   for(let c of candidates){if(pathSet.has(c)||board[c]?.type==='pump')continue;let opts=neighbors(c,n).filter(v=>!edges.some(e=>(e.a===c&&e.b===v.i)||(e.b===c&&e.a===v.i)));if(opts.length){dirtySource=c;break}}
+ }
+ let masks=new Array(count).fill(0);for(let i=0;i<count;i++)masks[i]=connectedMask(edges,i);
+ // Keep all pipes meaningful: the spanning tree fills the board and has branches/junctions.
+ board=Array.from({length:count},(_,i)=>({mask:masks[i],solution:masks[i],fixed:false,type:'pipe',orient:0,dirty:false,flow:0}));
+ board[source].type='source';board[goal].type='goal';
+ if(L>=15){
+   // Pumps are placed at the edge of the currently reachable range, so each one is reachable
+   // before it extends the pressure budget for the next segment.
+   const power=L<30?5:L<50?8:L<75?12:16;
+   let pressure=20, routeIndex=Math.min(18,path.length-2), placed=0;
+   const maxPumps=Math.max(1,Math.ceil(Math.max(0,path.length-1-20)/Math.max(1,power))+1);
+   while(routeIndex>0 && routeIndex<path.length-1 && placed<maxPumps){
+     const p=path[routeIndex];
+     if(p!==source&&p!==goal&&board[p].type==='pipe'){
+       board[p].type='pump';board[p].power=power;board[p].mask=15;board[p].solution=15;placed++;
+       pressure+=power;
+     }
+     if(routeIndex>=path.length-2)break;
+     routeIndex=Math.min(path.length-2,Math.max(routeIndex+1,pressure-1));
+   }
+   // Even short late-game routes show one useful pump, but it never replaces source or goal.
+   if(placed===0 && path.length>3){
+     const p=path[Math.max(1,Math.floor(path.length/2))];
+     if(p!==source&&p!==goal){board[p].type='pump';board[p].power=power;board[p].mask=15;board[p].solution=15;}
+   }
+ }
+ 
+ if(dirtySource>=0){
+   board[dirtySource].type='dirty';board[dirtySource].dirty=true;
+   // This contaminant is a side branch, not part of the guaranteed clean solution.
+   const opts=neighbors(dirtySource,n).filter(v=>!edges.some(e=>(e.a===dirtySource&&e.b===v.i)||(e.b===dirtySource&&e.a===v.i)));
+   board[dirtySource].mask=opts.length?bit(opts[0].d):0;
+   board[dirtySource].solution=board[dirtySource].mask;
+ }
+ // Gradually introduce fixed pipes; never make source/goal/contaminant fixed.
+ const fixedRate=L<3?0:L<8?.05:L<15?.1:L<25?.15:L<38?.2:.24;
+ for(let i=1;i<count-1;i++)if(i!==dirtySource&&r()<fixedRate){board[i].fixed=true}
+ // Shuffle orientations for movable pipes. If mask has rotational symmetry, use a random rotation anyway.
+ for(let i=0;i<count;i++){let cell=board[i];if(cell.type==='source'||cell.type==='goal'||cell.type==='dirty'||cell.type==='pump')continue;
+   let turns=cell.fixed?0:1+Math.floor(r()*3);
+   for(let k=0;k<turns;k++)cell.mask=rotateMask(cell.mask);
+   cell.orient=turns*90;
+ }
+ // Fixed pieces retain the solved orientation to guarantee a valid solution.
+ // If random generation happened to leave whole board solved, scramble a movable cell.
+ if(board.every(c=>c.fixed||['source','goal','dirty'].includes(c.type)||c.mask===c.solution)){
+   let opts=board.map((c,i)=>i).filter(i=>!board[i].fixed&&i!==source&&i!==goal&&i!==dirtySource&&board[i].mask!==15);
+   if(opts.length){let i=opts[0];board[i].mask=rotateMask(board[i].mask);board[i].orient+=90}
+ }
+ hints=3;moves=0;won=false;lost=false;flowState.clear();
+ $('level').textContent=`${L} / 100`;$('size').textContent=`${n}×${n}`;$('hints').textContent=hints;$('hintBtn').textContent=`✦ Подсказка (${hints})`;
+ $('nextBtn').style.display='none';$('message').textContent='Вода уже течёт — поворачивай трубы!';$('progress').style.width='0%';
+ $('objective').textContent=L<5?'Соедини источник с целью. Все доступные ответвления заполняются автоматически.': 'Доведи чистую воду до цели. Не открывай путь к источнику загрязнения!';
+ $('overlay').classList.remove('show');
+ renderBoard();simulate();
+}
+function svgFor(cell,i){
+ const dirs=[];for(let d=0;d<4;d++)if(has(cell.mask,d))dirs.push(d);
+ const lines=dirs.map(d=>{let x1=50,y1=50,x2=50,y2=50;if(d===0)y2=5;if(d===1)x2=95;if(d===2)y2=95;if(d===3)x2=5;return `<line class="basepipe" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="water ${cell.flow===2?'dirty':''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" data-dir="${d}"/>`}).join('');
+ let center=cell.mask?'<circle class="hub" cx="50" cy="50" r="8"/>':'';
+ let mark='';
+ if(cell.type==='source')mark='<circle cx="50" cy="50" r="14" fill="#36d9ff" opacity=".25"/><text x="50" y="56" text-anchor="middle" font-size="22" fill="#8cecff">S</text>';
+ if(cell.type==='goal')mark='<circle cx="50" cy="50" r="17" fill="#68f6b0" opacity=".2"/><text x="50" y="57" text-anchor="middle" font-size="22" fill="#68f6b0">★</text>';
+ if(cell.type==='pump')mark=`<circle cx="50" cy="50" r="14" fill="#ffd36a" opacity=".25"/><text x="50" y="56" text-anchor="middle" font-size="20" fill="#ffd36a">P</text><text x="50" y="69" text-anchor="middle" font-size="10" fill="#ffd36a">+${cell.power||5}</text>`;
+ if(cell.type==='dirty')mark='<circle cx="50" cy="50" r="15" fill="#c7ef3d" opacity=".28"/><text x="50" y="57" text-anchor="middle" font-size="22" fill="#dfff65">☣</text>';
+ return `<svg class="glyph" viewBox="0 0 100 100" aria-hidden="true">${lines}${center}${mark}</svg>`;
+}
+function applyZoom(){const z=$('boardZoom');if(!z)return;z.style.transform=`scale(${boardScale})`;$('zoomValue').textContent=Math.round(boardScale*100)+'%';}
+function setZoom(v){boardScale=Math.max(.55,Math.min(2.5,v));applyZoom();}
+$('zoomIn')?.addEventListener('click',()=>setZoom(boardScale+.15));
+$('zoomOut')?.addEventListener('click',()=>setZoom(boardScale-.15));
+$('zoomReset')?.addEventListener('click',()=>setZoom(1));
+$('boardViewport')?.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(boardScale+(e.deltaY<0?.08:-.08));}},{passive:false});
+let pinchStart=0,pinchScale=1;
+$('boardViewport')?.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);pinchScale=boardScale;}},{passive:true});
+$('boardViewport')?.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStart){e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);setZoom(pinchScale*d/pinchStart);}},{passive:false});
+function renderBoard(){
+ const n=Math.sqrt(board.length);boardEl.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;
+ boardEl.innerHTML='';
+ board.forEach((c,i)=>{let el=document.createElement('button');el.className='cell'+(c.fixed?' locked':'')+(c.type==='source'?' source':'')+(c.type==='goal'?' goal':'')+(c.type==='dirty'?' poison':'')+(c.type==='pump'?' pump':'');el.dataset.i=i;el.setAttribute('aria-label',c.type==='pump'?`Насос +${c.power||5}${c.fixed?', неподвижный':''}`:`${c.type}, ${c.fixed?'неподвижная':'повернуть трубу'}`);
+ el.innerHTML=svgFor(c,i)+(c.fixed?'<span class="lockmark">🔒</span>':'');if(i===rotatingIndex){const s=el.querySelector('svg');if(s)s.classList.add('pipe-turn');}
+ el.addEventListener('click',()=>turnPipe(i));boardEl.appendChild(el)});applyZoom();
+}
+function turnPipe(i){if(won||lost)return;let c=board[i];if(c.fixed||['source','goal','dirty'].includes(c.type)){if(c.fixed)message('Эта труба закреплена — её нельзя повернуть.');return}
+ c.mask=rotateMask(c.mask);c.orient=(c.orient+90)%360;moves++;rotatingIndex=i;playTone(280,.035);renderBoard();applyZoom();setTimeout(()=>{rotatingIndex=-1;},240);simulate();
+}
+function message(t){$('message').textContent=t}
+function computeFlow(){
+ const n=Math.sqrt(board.length), clean=new Set([source]), dirty=new Set();
+ const baseRange=20;
+ function spread(start,seen,type){
+  // Track the greatest remaining range at each cell; a pump replenishes range on entry.
+  const best=new Array(board.length).fill(-1), queue=[{i:start,remaining:baseRange}];
+  best[start]=baseRange;
+  while(queue.length){
+   const {i,remaining}=queue.shift(), c=board[i];
+   for(let d=0;d<4;d++){
+    if(!has(c.mask,d))continue;
+    let x=i%n+DX[d],y=Math.floor(i/n)+DY[d];
+    if(x<0||y<0||x>=n||y>=n)continue;
+    let j=index(x,y,n),other=board[j],back=(d+2)%4;
+    if(!has(other.mask,back))continue;
+    let next=remaining-1;
+    if(other.type==='pump')next=Math.min(board.length,next+(other.power||5));
+    if(next<0||next<=best[j])continue;
+    best[j]=next;seen.add(j);queue.push({i:j,remaining:next});
+   }
+  }
+ }
+ spread(source,clean,1);
+ if(dirtySource>=0){dirty.add(dirtySource);spread(dirtySource,dirty,2)}
+ const dirtyConnected=dirtySource>=0&&Array.from(neighbors(dirtySource,n)).some(v=>clean.has(v.i)&&has(board[v.i].mask,(v.d+2)%4)&&has(board[dirtySource].mask,v.d));
+ if(dirtyConnected){dirty=new Set([dirtySource]);spread(dirtySource,dirty,2)}
+ let water=new Array(board.length).fill(0);clean.forEach(i=>water[i]=1);dirty.forEach(i=>water[i]=2);
+ return {water,clean,dirty,dirtyConnected,goalReached:clean.has(goal)};
+}
+function simulate(){
+ if(won||lost)return;
+ let f=computeFlow();
+ const reachedPumps=[...f.clean].filter(i=>board[i].type==='pump');
+ const effectivePressure=20+reachedPumps.reduce((sum,i)=>sum+(board[i].power||5),0);
+ if($('pressureValue'))$('pressureValue').textContent=`${effectivePressure} клеток`;
+ if($('pressureDetail'))$('pressureDetail').textContent=reachedPumps.length?`Источник 20 + ${reachedPumps.map(i=>'+'+(board[i].power||5)).join(' + ')}`:'Базовый напор источника';
+ // Only a connected, actively reached contamination source is fatal.
+ if(f.dirtyConnected){playTone(110,.35);lost=true;f.water.forEach((v,i)=>{board[i].flow=v===1?2:v});renderFlow(f);message('☣ Грязная вода попала в сеть! Уровень провален.');showModal('Загрязнение!','Чистый поток встретился с грязной водой. Попробуй ещё раз.','retry');return}
+ board.forEach((c,i)=>c.flow=f.water[i]);
+ renderFlow(f);
+ const reached=f.goalReached;$('progress').style.width=(reached?'100%':Math.min(92,Math.round(f.clean.size/board.length*100)))+'%';
+ if(reached){playTone(740,.18);won=true;completedLevels.add(level);try{localStorage.setItem('potok_completed_levels',JSON.stringify([...completedLevels].sort((a,b)=>a-b)))}catch(e){}message(`Цель достигнута за ${moves} поворотов!`);$('nextBtn').style.display='block';playTone(620,.13);showModal(level===100?'Все 100 уровней пройдены!':'Уровень пройден!',level===100?'Ты прошёл все уровни! Можно начать заново.':`Уровень ${level} завершён. Использовано поворотов: ${moves}.`,'next')}
+ else message(`Вода течёт по ${f.clean.size} ячейкам сети. Повороты: ${moves}.`);
+}
+function renderFlow(f){
+ [...boardEl.children].forEach((el,i)=>{let c=board[i];el.innerHTML=svgFor(c,i)+(c.fixed?'<span class="lockmark">🔒</span>':'');if(i===rotatingIndex){const s=el.querySelector('svg');if(s)s.classList.add('pipe-turn');}el.classList.toggle('filled',f.water[i]===1);el.classList.toggle('contaminated',f.water[i]===2);el.classList.toggle('active',f.clean.has(i));el.classList.toggle('danger',f.dirty.has(i));});
+ animateFlow();
+}
+function animateFlow(){
+ // Animated moving beads travel along connected pipe edges; recomputed after every tap.
+ if(window.flowRAF)cancelAnimationFrame(window.flowRAF);
+ const start=performance.now();
+ function frame(now){if(!document.hidden){let t=(now-start)/850;
+   board.forEach((c,i)=>{if(!c.flow)return;let el=boardEl.children[i];if(!el)return;let svg=el.querySelector('svg');if(!svg)return;
+    svg.querySelectorAll('.water').forEach(line=>{let d=+line.dataset.dir,active=has(c.mask,d);line.style.opacity=active?(c.flow===2?.95:.85):0;
+     let old=line.parentNode.querySelector(`circle[data-bead="${d}"]`);if(old)old.remove();
+     if(active){let x=50,y=50,dist=((t+i*.13)%1)*44;if(d===0)y=50-dist;if(d===1)x=50+dist;if(d===2)y=50+dist;if(d===3)x=50-dist;let dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r',c.flow===2?3.8:3.2);dot.setAttribute('class',c.flow===2?'dirtydot':'flowdot');dot.dataset.bead=d;svg.appendChild(dot)}
+    });
+   });
+  }window.flowRAF=requestAnimationFrame(frame)}
+ window.flowRAF=requestAnimationFrame(frame);
+}
+function showModal(title,txt,action){$('modalTitle').textContent=title;$('modalText').textContent=txt;$('modalBtn').textContent=action==='retry'?'Повторить уровень':'Продолжить →';$('modalBtn').onclick=()=>{if(action==='retry')makeLevel(level);else if(level<100)makeLevel(level+1);else makeLevel(1);$('overlay').classList.remove('show')};$('overlay').classList.add('show')}
+function hint(){if(won||lost)return;if(hints<=0){message('Подсказки закончились на этом уровне.');return}
+ hints--; $('hints').textContent=hints;$('hintBtn').textContent=`✦ Подсказка (${hints})`;
+ // Find a mismatched movable pipe and rotate it toward its known solution. One click = one 90° rotation.
+ let candidates=board.map((c,i)=>({c,i})).filter(o=>!o.c.fixed&&['pipe','pump'].includes(o.c.type)&&o.c.mask!==o.c.solution);
+ if(!candidates.length){message('Все трубы уже стоят как в решении — проверь загрязнённую ветку.');return}
+ candidates.sort((a,b)=>Number(b.c.mask!==b.c.solution)-Number(a.c.mask!==a.c.solution));
+ let {c,i}=candidates[0],tries=0;while(c.mask!==c.solution&&tries<4){c.mask=rotateMask(c.mask);c.orient=(c.orient+90)%360;tries++}
+ moves+=tries;renderBoard();simulate();message(`Подсказка использована. Осталось: ${hints}.`);
+}
+function playTone(freq,dur){if(!soundOn)return;try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=freq;o.type='sine';g.gain.value=.045;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur)}catch(e){}}
+$('hintBtn').onclick=hint;$('nextBtn').onclick=()=>{if(level<100)makeLevel(level+1);else makeLevel(1)};
+$('soundBtn').onclick=()=>{soundOn=!soundOn;$('soundBtn').textContent=`♫ Звук: ${soundOn?'вкл.':'выкл.'}`;if(soundOn)playTone(440,.08)};
+function renderLevels(){
+ const grid=$('levelsGrid');grid.innerHTML='';
+ for(let l=1;l<=100;l++){
+  const b=document.createElement('button');b.className='level-choice'+(completedLevels.has(l)?' done':'')+(l===level?' current':'');
+  b.innerHTML=`${l}${completedLevels.has(l)?'<span class="check">✓</span>':''}`;
+  b.setAttribute('aria-label',`Уровень ${l}${completedLevels.has(l)?', пройден':''}`);
+  b.onclick=()=>{makeLevel(l);$('levelsOverlay').classList.remove('show')};grid.appendChild(b);
+ }
+}
+$('levelsBtn').onclick=()=>{renderLevels();$('levelsOverlay').classList.add('show')};
+$('closeLevelsBtn').onclick=()=>$('levelsOverlay').classList.remove('show');
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!won&&!lost)simulate()});
+const noteMap={2:['Разветвления','Вода проходит по всем совпадающим соединениям, включая крестовины.'],5:['Кислота','Если поток соединится с кислотным источником, вода загрязнится и уровень будет проигран.'],10:['Закреплённые трубы','Трубы с замком нельзя поворачивать. Некоторые трубы рядом с кислотой закреплены.'],15:['Насосы +5','Насос добавляет 5 клеток дальности потока.'],30:['Насосы +8','Появились насосы, добавляющие 8 клеток дальности.'],50:['Насосы +12','Усиленные насосы добавляют 12 клеток дальности.'],75:['Насосы +16','Промышленные насосы добавляют 16 клеток дальности.']};
+ const noteSeen=new Set();try{JSON.parse(localStorage.getItem('potok_note_seen')||'[]').forEach(x=>noteSeen.add(x))}catch(e){}
+ const originalMakeLevel=makeLevel;
+ makeLevel=function(L){originalMakeLevel(L);if(noteMap[L]&&!noteSeen.has(L)){noteSeen.add(L);try{localStorage.setItem('potok_note_seen',JSON.stringify([...noteSeen]))}catch(e){}showModal(noteMap[L][0],noteMap[L][1],'next')}}; 
+ makeLevel(1);
+})();
+</script></body></html>
